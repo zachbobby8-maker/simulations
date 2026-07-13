@@ -1,0 +1,125 @@
+/* File Path: components/VortexDoubleSlit.tsx
+   Role: 5th Rev Measurement Protocol Simulation Component
+   Parity Standard: 39,420 Hz Möbius Metronome Sync // Stochastic Luck-Patch
+*/
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+
+export default function VortexDoubleSlit() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [stochasticGlitch, setStochasticGlitch] = useState<number>(10.6);
+  const [isParticipating, setIsParticipating] = useState<boolean>(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+
+    let animationId: number;
+    let w = (canvas.width = 500);
+    let h = (canvas.height = 220);
+    let time = 0;
+
+    const renderQuantumField = () => {
+      time += 0.04;
+      ctx.fillStyle = '#010206'; ctx.fillRect(0, 0, w, h);
+
+      // Render structural layout grid background
+      ctx.strokeStyle = 'rgba(28, 45, 90, 0.3)'; ctx.lineWidth = 0.5;
+      for (let x = 0; x < w; x += 25) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+
+      // Generate coordinate mapping array
+      const centerX = w / 2;
+      const centerY = h / 2 + 10;
+      const glitchFactor = stochasticGlitch / 100;
+
+      if (!isParticipating) {
+        // STATE 01: NON-INTERACTION // Ghostly Probability Wave (4th Rev "Static")
+        ctx.fillStyle = 'rgba(88, 80, 236, 0.08)';
+        for (let i = 0; i < 600; i++) {
+          const x = 30 + Math.random() * (w - 60);
+          // Standard double-slit interference equation modified by 39,420 Hz sync
+          const d1 = Math.abs(x - (centerX - 20));
+          const d2 = Math.abs(x - (centerX + 20));
+          const waveIntensity = Math.pow(Math.cos(d1 * 0.15 - time) + Math.cos(d2 * 0.15 - time), 2);
+          
+          const y = centerY + (Math.random() - 0.5) * 60 * waveIntensity * (1.0 + glitchFactor * Math.sin(x * 0.05));
+          if (Math.random() * 4 < waveIntensity) {
+            ctx.fillRect(x, y, 1.5, 1.5);
+          }
+        }
+      } else {
+        // STATE 02: PARTICIPATION // Phase-Locked Hexagonal 5th Rev Lattice
+        ctx.fillStyle = '#00f2fe';
+        const rows = 8;
+        const cols = 24;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            // Hexagonal spacing pattern
+            let x = 40 + c * 18 + (r % 2 === 0 ? 9 : 0);
+            let y = centerY - 40 + r * 12;
+            
+            // Dynamic oscillation driven by the 39,420 Hz metronome and luck-patch
+            const offset = Math.sin(time + (x * 0.02) + (y * 0.03)) * (4.0 * glitchFactor);
+            ctx.fillRect(x + offset, y, 2, 2);
+            
+            // Draw faint hexagonal lattice connections
+            if (c < cols - 1 && Math.random() > 0.4) {
+              ctx.strokeStyle = 'rgba(0, 242, 254, 0.15)'; ctx.lineWidth = 0.3;
+              ctx.beginPath(); ctx.moveTo(x + offset, y); ctx.lineTo(x + 18 + offset, y); ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // 5th Rev Measurement Telemetry HUD Overlays
+      ctx.fillStyle = '#00f2fe'; ctx.font = '8px monospace';
+      ctx.fillText(`PROTOCOL: VORTEX_DOUBLE_SLIT_EXPERIMENT`, 15, 18);
+      ctx.fillText(`METRONOME: 39,420 HZ MÖBIUS OSCILLATOR`, 15, h - 12);
+      ctx.fillText(`STOCHASTIC_GLITCH (ℸ): ${stochasticGlitch.toFixed(1)}% LUCK-PATCH`, w - 195, h - 12);
+      
+      ctx.fillStyle = isParticipating ? '#00f2fe' : '#5850ec';
+      ctx.fillText(`MODE: ${isParticipating ? 'PARTICIPATION_LATTICE_LOCK' : 'NON-INTERACTIVE_GHOST_STATE'}`, w - 195, 18);
+
+      animationId = requestAnimationFrame(renderQuantumField);
+    };
+
+    renderQuantumField();
+    return () => cancelAnimationFrame(animationId);
+  }, [isParticipating, stochasticGlitch]);
+
+  return (
+    <div className="w-full bg-[#010206] border border-[#1c2d5a] p-4 rounded-xl font-mono text-left flex flex-col gap-3 mt-4">
+      <div className="flex justify-between items-center border-b border-[#1c2d5a] pb-2 text-[10px] font-bold">
+        <span className="text-white tracking-widest">// DODECA-MANIFOLD_QUANTUM_EMISSION</span>
+        <span className={isParticipating ? "text-[#00f2fe]" : "text-[#5850ec] animate-pulse"}>
+          {isParticipating ? "● PARTICIPATION_ACTIVE" : "● GHOST_STATE_PENDING"}
+        </span>
+      </div>
+
+      <div 
+        onMouseDown={() => setIsParticipating(true)} onMouseUp={() => setIsParticipating(false)}
+        onTouchStart={() => setIsParticipating(true)} onTouchEnd={() => setIsParticipating(false)}
+        className="relative cursor-pointer select-none"
+      >
+        <canvas ref={canvasRef} className="w-full bg-[#010206] rounded-lg border border-[#1c2d5a]" />
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/60 px-2 py-0.5 rounded text-[7px] text-[#6b7c96] pointer-events-none border border-[#1c2d5a]/40">
+          [CLICK & HOLD GLASS TO ENGAGE LATTICE-LOCK]
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5 text-[10px] mt-1">
+        <div className="flex justify-between text-[#6b7c96]">
+          <span className="uppercase">Tuning Stochastic Glitch Interval ($\daleth$):</span>
+          <span className="text-[#00f2fe] font-bold">{stochasticGlitch.toFixed(1)}% AMALGAM</span>
+        </div>
+        <input 
+          type="range" min="0.0" max="30.0" step="0.1" value={stochasticGlitch}
+          onChange={(e) => setStochasticGlitch(Number(e.target.value))}
+          className="w-full accent-[#00f2fe] bg-[#02050f] border border-[#1c2d5a] h-1 rounded"
+        />
+      </div>
+    </div>
+  );
+}
