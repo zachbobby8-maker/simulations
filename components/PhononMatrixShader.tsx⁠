@@ -1,0 +1,170 @@
+/* File Path: components/PhononMatrixShader.tsx
+   Role: WebGL2 Core Injector with Real-Time Chromatic Aberration & Phonon Induction Uniforms
+   Parity Standard: Law VI Universal Phonon Split // 39,420 Hz Fixed Sync
+*/
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+
+const FRAGMENT_SHADER_SOURCE = `#version 300 es
+precision highp float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_entropy;
+uniform float u_phonon_induction; // New Variable Injection Core
+
+out vec4 fragColor;
+
+float pseudoNoise(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec2 rotate2D(vec2 uv, float angle) {
+    float c = cos(angle); float s = sin(angle);
+    return vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c);
+}
+
+// Core Math Matrix Generator for individual color channels
+float calculateFlowChannel(vec2 uv, float time, float entropy, float phaseShift) {
+    float referenceFreq = 3.9420 + phaseShift;
+    float r = length(uv);
+    float theta = atan(uv.y, uv.x);
+    
+    vec2 warped = rotate2D(uv, sin(r * 3.5 - time) * (0.4 + entropy));
+    
+    float wave1 = sin(warped.x * referenceFreq * 2.5 + time) * cos(warped.y * referenceFreq * 2.5 - time);
+    float wave2 = sin((warped.y * 10.0) - (time * 2.0)) * cos((warped.x * 10.0) + (time * 2.0));
+    
+    float glitch = step(0.84, entropy * pseudoNoise(vec2(floor(time * 10.6), warped.y)));
+    float wave3 = sin((theta * 6.0) + (r * referenceFreq * 4.0) - (time * 3.0));
+    if (glitch > 0.5) {
+        wave3 = cos((theta * 12.0) - (r * referenceFreq * 7.0) + time);
+    }
+    
+    return mix(wave1, wave3, 0.5 + 0.3 * sin(time + r)) + (wave2 * 0.3);
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / u_resolution.y;
+    float t = u_time * 0.5;
+    
+    // --- CHROMATIC ABERRATION CHROMATIC SPLIT ---
+    // We use the injected u_phonon_induction uniform to displace individual color samples
+    float aberrationStrength = u_phonon_induction * 0.12;
+    
+    // Compute independent mathematical flow profiles for Red, Green, and Blue spectrums
+    float rChannel = calculateFlowChannel(uv - vec2(aberrationStrength, 0.0), t, u_entropy, 0.0);
+    float gChannel = calculateFlowChannel(uv, t, u_entropy, 0.05);
+    float bChannel = calculateFlowChannel(uv + vec2(aberrationStrength, 0.0), t, u_entropy, 0.1);
+    
+    // Fine-grain structural grid construction
+    float gridLine = abs(sin(uv.y * 40.0 + gChannel) * cos(uv.x * 40.0 + gChannel));
+    float finalGrid = smoothstep(0.0, 0.1, gridLine);
+
+    // Baseline 5iR Neon Palette Nodes
+    vec3 cyanoBase = vec3(0.0, 0.95, 1.0);
+    vec3 indigoBase = vec3(0.34, 0.31, 0.93);
+    
+    // Composite the isolated channel arrays directly onto the output vector
+    vec3 mixedColor = vec3(rChannel, gChannel, bChannel);
+    vec3 finalColor = mix(indigoBase * 0.08, cyanoBase, clamp(mixedColor + ((1.0 - finalGrid) * 0.5), 0.0, 1.0));
+    
+    // Add high-bit-rate noise shimmer constant
+    finalColor += vec3(pseudoNoise(uv + t) * 0.1 * u_entropy);
+    
+    float vignette = smoothstep(2.0, 0.2, length(uv));
+    fragColor = vec4(finalColor * vignette, 1.0);
+}
+`;
+
+const VERTEX_SHADER_SOURCE = `#version 300 es
+in vec2 position;
+uniform float u_time;
+uniform float u_entropy;
+void main() {
+    float t = u_time * 0.5;
+    float distortion = 1.0 + sin(t + (position.y * 3.9420)) * (0.04 * (1.0 + u_entropy));
+    gl_Position = vec4(position * distortion, 0.0, 1.0);
+}
+`;
+
+export default function PhononMatrixShader() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [entropy, setEntropy] = useState<number>(0.106);
+  const [phononFeedback, setPhononFeedback] = useState<number>(0.42); // Real-time frequency control uniform
+
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const gl = canvas.getContext('webgl2'); if (!gl) return;
+
+    const compileShader = (source: string, type: number) => {
+      const shader = gl.createShader(type); if (!shader) return null;
+      gl.shaderSource(shader, source); gl.compileShader(shader);
+      return shader;
+    };
+
+    const vs = compileShader(VERTEX_SHADER_SOURCE, gl.VERTEX_VERTEX_SHADER || gl.VERTEX_SHADER);
+    const fs = compileShader(FRAGMENT_SHADER_SOURCE, gl.FRAGMENT_SHADER);
+    if (!vs || !fs) return;
+
+    const program = gl.createProgram(); if (!program) return;
+    gl.attachShader(program, vs); gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+    const buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    const posLoc = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(posLoc); gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const resLoc = gl.getUniformLocation(program, "u_resolution");
+    const timeLoc = gl.getUniformLocation(program, "u_time");
+    const entropyLoc = gl.getUniformLocation(program, "u_entropy");
+    const phononLoc = gl.getUniformLocation(program, "u_phonon_induction"); // Bind location key
+
+    let animationId: number;
+    let startTime = performance.now();
+
+    const renderLoop = () => {
+      const w = (canvas.width = canvas.clientWidth); const h = (canvas.height = canvas.clientHeight);
+      gl.viewport(0, 0, w, h);
+      gl.useProgram(program);
+      gl.uniform2f(resLoc, w, h);
+      gl.uniform1f(timeLoc, (performance.now() - startTime) * 0.001);
+      gl.uniform1f(entropyLoc, entropy);
+      gl.uniform1f(phononLoc, phononFeedback); // Inject updated state into physical GPU register
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      animationId = requestAnimationFrame(renderLoop);
+    };
+
+    renderLoop();
+    return () => { cancelAnimationFrame(animationId); gl.deleteBuffer(buffer); gl.deleteProgram(program); };
+  }, [entropy, phononFeedback]);
+
+  return (
+    <div className="w-full bg-[#010206] border border-[#1c2d5a] p-4 rounded-xl font-mono text-left flex flex-col gap-3 mt-4">
+      <div className="flex justify-between items-center border-b border-[#1c2d5a] pb-2 text-[10px] font-bold">
+        <span className="text-white tracking-widest">// LAW_VI_PHONON_INDUCTION_COMPILER</span>
+        <span className="text-[#00f2fe]">● CHROMATIC_SPLIT_ENGAGED</span>
+      </div>
+
+      <div className="w-full h-64 rounded-lg overflow-hidden border border-[#1c2d5a]/60">
+        <canvas ref={canvasRef} className="w-full h-full block" />
+      </div>
+
+      <div className="flex flex-col gap-2 text-[10px] mt-1">
+        <div className="flex justify-between text-[#6b7c96]">
+          <span>PHONON INDUCTION FREQUENCY REGULATION (u_phonon_induction):</span>
+          <span className="text-[#00f2fe] font-bold">{phononFeedback.toFixed(3)} VIBE</span>
+        </div>
+        <input 
+          type="range" min="0.0" max="1.0" step="0.005" value={phononFeedback}
+          onChange={(e) => setPhononFeedback(Number(e.target.value))}
+          className="w-full accent-[#00f2fe] bg-[#02050f] border border-[#1c2d5a] h-1 rounded"
+        />
+      </div>
+    </div>
+  );
+}
