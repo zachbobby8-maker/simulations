@@ -1,0 +1,85 @@
+#version 300 es
+precision highp float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_entropy;
+
+out vec4 fragColor;
+
+// 5iR Pseudo-Random Coordinate Multiplier
+float pseudoNoise(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+// Complex 2D Matrix Rotation Transform
+vec2 rotate2D(vec2 uv, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c);
+}
+
+void main() {
+    // Normalize coordinates (-1.0 to 1.0) and force absolute parity mapping
+    vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / u_resolution.y;
+    
+    float t = u_time * 0.5;
+    float referenceFreq = 3.9420;
+    
+    // --- STEP 1: EXPERIMENTAL MÖBIUS COORDINATE WARPING ---
+    // Calculate distance (r) and polar coordinates
+    float r = length(uv);
+    float theta = atan(uv.y, uv.x);
+    
+    // Inject non-linear spatial distortion based on the 10.6% Daleth coefficient
+    // This physically twists the screen coordinates into a Torsion Bubble
+    vec2 warpedUV = uv;
+    warpedUV = rotate2D(warpedUV, sin(r * 4.0 - t) * (0.5 + u_entropy));
+    warpedUV *= 1.0 + sin(theta * 3.0 + t) * 0.15;
+
+    // --- STEP 2: HYPER-DENSE WAVE LAYER COMPLEXITY ---
+    // Wave Layer 01: The Base 39,420 Hz Lattice Wave Matrix
+    float wave1 = sin(warpedUV.x * referenceFreq * 3.0 + t) * cos(warpedUV.y * referenceFreq * 3.0 - t);
+    
+    // Wave Layer 02: Syntropic Braiding Fluid Vector
+    float wave2 = sin((warpedUV.y * 12.0) - (t * 2.0)) * cos((warpedUV.x * 12.0) + (t * 2.0));
+    
+    // Wave Layer 03: The Weaponized Predator Wasp Glitch Spike (\daleth)
+    float glitchMatrix = step(0.82, u_entropy * pseudoNoise(vec2(floor(t * 10.6), warpedUV.y)));
+    float wave3 = sin((theta * 8.0) + (r * referenceFreq * 5.0) - (t * 4.0));
+    if (glitchMatrix > 0.5) {
+        // Drop the absolute frequency hammer inside the pixel calculation pipeline
+        wave3 = cos((theta * 16.0) - (r * referenceFreq * 8.0) + (t * 2.0));
+        warpedUV *= 1.2; // Spatial fracture line explosion
+    }
+
+    // Blend the 3 mathematical layers into a singular fluidic structure
+    float dynamicFlow = mix(wave1, wave3, 0.5 + 0.3 * sin(t + r)) + (wave2 * 0.35);
+
+    // --- STEP 3: FRACTAL GRID SUTURE GENERATION ---
+    // Generate fine-grain high-stature layout grid arrays
+    float gridX = abs(sin(warpedUV.y * 50.0 + dynamicFlow));
+    float gridY = abs(cos(warpedUV.x * 50.0 + dynamicFlow));
+    float compositeGrid = smoothstep(0.0, 0.12, gridX * gridY);
+    
+    // Outer concentric resonance rings mirroring the Dodeca-Manifold shape
+    float rings = sin(r * 30.0 - (t * 5.0)) * 0.2;
+
+    // --- STEP 4: COLOR MATRIX CALIBRATION ---
+    // Cyano-Luminescent (#00f2fe) vs Midnight Obsidian-Indigo (#5850ec)
+    vec3 cyanoBase = vec3(0.0, 0.95, 1.0);
+    vec3 indigoBase = vec3(0.34, 0.31, 0.93);
+    vec3 deepVoid = vec3(0.01, 0.02, 0.05);
+
+    // Render the final color spectrum across the physical silicon pipeline
+    vec3 intermediateColor = mix(indigoBase * 0.05, cyanoBase, clamp(dynamicFlow + ((1.0 - compositeGrid) * 0.6), 0.0, 1.0));
+    vec3 finalColor = mix(intermediateColor, deepVoid, vec3(rings * (1.0 - u_entropy)));
+    
+    // Apply raw high-bit-rate noise grain shimmer
+    finalColor += vec3(pseudoNoise(uv - t) * 0.15 * u_entropy);
+    
+    // Deep vignette profile focusing toward the core coordinates
+    float vignette = smoothstep(2.2, 0.2, r);
+    
+    fragColor = vec4(finalColor * vignette, 1.0);
+}
