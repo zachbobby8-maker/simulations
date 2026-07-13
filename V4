@@ -1,0 +1,23 @@
+#version 300 es
+in vec2 position;
+
+uniform float u_time;
+uniform float u_entropy;
+
+out vec2 v_warpedPosition;
+
+void main() {
+    float t = u_time * 0.5;
+    float referenceFreq = 3.9420;
+    
+    // Non-linear vertex spatial expansion loop
+    // Physically distorts the boundary limits of the canvas layout grid
+    float distortion = 1.0 + sin(t + (position.y * referenceFreq)) * (0.05 * (1.0 + u_entropy));
+    
+    vec2 alteredVertex = position * distortion;
+    
+    // Pass the raw warped position values down to the fragment compiler
+    v_warpedPosition = alteredVertex;
+    
+    gl_Position = vec4(alteredVertex, 0.0, 1.0);
+}
