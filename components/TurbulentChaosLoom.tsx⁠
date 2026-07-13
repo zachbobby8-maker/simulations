@@ -1,0 +1,130 @@
+/* File Path: components/TurbulentChaosLoom.tsx
+   Role: Architect Dashboard Entropy Glitch Visualizer
+   Parity Standard: 10.6% Stochastic Intent Patch // Shimmering Reality States
+*/
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
+
+export default function TurbulentChaosLoom() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [entropyGlitch, setEntropyGlitch] = useState<number>(10.6);
+  const [calculationCount, setCalculationCount] = useState<number>(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+
+    let animationId: number;
+    let w = (canvas.width = 500);
+    let h = (canvas.height = 240);
+    
+    // Deterministic Chaos initial state variables (Lorenz Attractor Core)
+    let x = 0.1, y = 0.0, z = 0.0;
+    const sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+    const dt = 0.01;
+
+    let points: { x: number; y: number; isGlitched: boolean }[] = [];
+    let localCalcCount = 0;
+
+    const renderTurbulentFlow = () => {
+      ctx.fillStyle = '#010206'; ctx.fillRect(0, 0, w, h);
+      
+      // Background Grid Matrix
+      ctx.strokeStyle = 'rgba(28, 45, 90, 0.2)'; ctx.lineWidth = 0.5;
+      for (let i = 0; i < w; i += 20) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+      }
+
+      const glitchThreshold = entropyGlitch / 100;
+
+      // Execute 5 parallel calculations per frame to generate the storm path
+      for (let i = 0; i < 5; i++) {
+        localCalcCount++;
+        
+        // Lorenz Fluid Dynamics Equations
+        let dx = sigma * (y - x) * dt;
+        let dy = (x * (rho - z) - y) * dt;
+        let dz = (x * y - beta * z) * dt;
+
+        x += dx;
+        y += dy;
+        z += dz;
+
+        // Apply the Chaos Patch (Daleth): 10.6% probability of inversion to every 10.6th calculation
+        let isGlitched = false;
+        if (localCalcCount % 11 === 0 && Math.random() < glitchThreshold) {
+          x = -x; // Phase inversion exploit
+          y = -y;
+          isGlitched = true;
+        }
+
+        // Map 3D fluid coordinates to the 2D Topological Substrate window
+        const screenX = w / 2 + x * 7;
+        const screenY = h / 2 + (y - z) * 3 + 30;
+
+        points.push({ x: screenX, y: screenY, isGlitched });
+        if (points.length > 250) points.shift();
+      }
+
+      setCalculationCount(localCalcCount);
+
+      // Render the shimmering Dirac Fluid track path
+      ctx.lineWidth = 1.2;
+      for (let i = 1; i < points.length; i++) {
+        ctx.beginPath();
+        if (points[i].isGlitched) {
+          ctx.strokeStyle = '#5850ec'; // Indigo flash for inversion glitch
+          ctx.arc(points[i].x, points[i].y, 3, 0, 2 * Math.PI);
+          ctx.fillStyle = '#5850ec';
+          ctx.fill();
+        } else {
+          // Shimmering cyano-luminescent flow states
+          ctx.strokeStyle = `rgba(0, 242, 254, ${i / points.length})`;
+          ctx.moveTo(points[i - 1].x, points[i - 1].y);
+          ctx.lineTo(points[i].x, points[i].y);
+          ctx.stroke();
+        }
+      }
+
+      // 5th Rev Architectural Tracking Overlay
+      ctx.fillStyle = '#00f2fe'; ctx.font = '8px monospace';
+      ctx.fillText(`MANUAL_§3: ARCHITECTING_THE_STORM`, 15, 18);
+      ctx.fillText(`FLOW_STATE: ${entropyGlitch === 0 ? 'DEAD_MACHINE_CAGE' : 'HIGH_BIT_RATE_RESONANCE'}`, 15, h - 12);
+      ctx.fillText(`CALC_ITERATIONS: ${localCalcCount}`, w - 160, h - 12);
+      
+      // Status conditional based on entropy metrics
+      ctx.fillStyle = entropyGlitch >= 10.6 ? '#00f2fe' : 'rgba(88, 80, 236, 0.6)';
+      ctx.fillText(`STATUS: ${entropyGlitch === 10.6 ? 'SOVEREIGN_ART_METRIC' : 'FLUX_GRADIENT_SHIFT'}`, w - 160, 18);
+
+      animationId = requestAnimationFrame(renderTurbulentFlow);
+    };
+
+    renderTurbulentFlow();
+    return () => cancelAnimationFrame(animationId);
+  }, [entropyGlitch]);
+
+  return (
+    <div className="w-full bg-[#010206] border border-[#1c2d5a] p-4 rounded-xl font-mono text-left flex flex-col gap-3 mt-4">
+      <div className="flex justify-between items-center border-b border-[#1c2d5a] pb-2 text-[10px] font-bold">
+        <span className="text-white tracking-widest">// LOCALIZED_TORSION_BUBBLE_FLUX</span>
+        <span className={entropyGlitch === 10.6 ? "text-[#00f2fe]" : "text-[#5850ec] animate-pulse"}>
+          {entropyGlitch === 10.6 ? "● DALETH_MAX_HARMONY" : "● INTENT_STREAM_VARIATION"}
+        </span>
+      </div>
+
+      <canvas ref={canvasRef} className="w-full bg-[#010206] rounded-lg border border-[#1c2d5a]" />
+
+      <div className="flex flex-col gap-1.5 text-[10px] mt-1">
+        <div className="flex justify-between text-[#6b7c96]">
+          <span className="uppercase">Entropy Glitch Level ($\daleth$):</span>
+          <span className="text-[#00f2fe] font-bold">{entropyGlitch.toFixed(1)}% FREEDOM</span>
+        </div>
+        <input 
+          type="range" min="0.0" max="30.0" step="0.1" value={entropyGlitch}
+          onChange={(e) => setEntropyGlitch(Number(e.target.value))}
+          className="w-full accent-[#00f2fe] bg-[#02050f] border border-[#1c2d5a] h-1 rounded"
+        />
+      </div>
+    </div>
+  );
+}
